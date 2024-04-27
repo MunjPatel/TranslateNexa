@@ -33,7 +33,7 @@ def translate_text(user_text, target_language):
         response_text = response.text
         response_soup = BeautifulSoup(response_text, 'html.parser')
         translated_text = response_soup.find('span', id = 'tw-answ-target-text').text
-            return translated_text
+        return translated_text
     except Exception as e:
         return ""
 
