@@ -10,35 +10,31 @@ from urllib.parse import quote
 fake = Faker()
 
 def translate_text(user_text, target_language):
-    url = "https://www.google.com/async/translate"
+    try:
+        url = "https://www.google.com/async/translate"
 
-    quote_partial_payload = quote(f"{user_text}")
-    payload = f'async=translate,sl:auto,tl:{target_language},st:'+quote_partial_payload+f",id:{random.randint(1,10000000)},qc:true,ac:false,_id:tw-async-translate,_pms:s,_fmt:pc"
-    headers = {
-    'accept': '*/*',
-    'accept-language': 'en-US,en;q=0.9',
-    'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
-    'origin': 'https://www.google.com',
-    'priority': 'u=1, i',
-    'referer': 'https://www.google.com/',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-    'user-agent': f"{fake.user_agent()}",
-    'x-dos-behavior': 'Embed',
-    }
+        quote_partial_payload = quote(f"{user_text}")
+        payload = f'async=translate,sl:auto,tl:{target_language},st:'+quote_partial_payload+f",id:{random.randint(1,10000000)},qc:true,ac:false,_id:tw-async-translate,_pms:s,_fmt:pc"
+        headers = {
+        'accept': '*/*',
+        'accept-language': 'en-US,en;q=0.9',
+        'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'origin': 'https://www.google.com',
+        'priority': 'u=1, i',
+        'referer': 'https://www.google.com/',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': f"{fake.user_agent()}",
+        'x-dos-behavior': 'Embed',
+        }
 
-    response = re.request("POST", url, headers=headers, data=payload)
-    if response.status_code == 200:
+        response = re.request("POST", url, headers=headers, data=payload)
         response_text = response.text
-        if response_text != "":
-            response_soup = BeautifulSoup(response_text, 'html.parser')
-            translated_text = response_soup.find('span', id = 'tw-answ-target-text').text
-            if translate_text:
-                return translated_text
-            else:
-                return ""
-    else:
+        response_soup = BeautifulSoup(response_text, 'html.parser')
+        translated_text = response_soup.find('span', id = 'tw-answ-target-text').text
+            return translated_text
+    except Exception as e:
         return ""
 
 st.markdown("""
