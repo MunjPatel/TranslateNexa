@@ -11,12 +11,11 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from faker import Faker
 from urllib.parse import quote
-from asyncio import WindowsSelectorEventLoopPolicy
+# from asyncio import WindowsSelectorEventLoopPolicy
 
 fake = Faker()
-# Set the event loop policy to use WindowsSelectorEventLoop
-if asyncio.get_event_loop_policy() is not WindowsSelectorEventLoopPolicy:
-    asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
+# if asyncio.get_event_loop_policy() is not WindowsSelectorEventLoopPolicy:
+#     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
 async def translate_text(user_text, target_language):
     url = "https://www.google.com/async/translate"
