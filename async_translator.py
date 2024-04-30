@@ -3,6 +3,7 @@ import random
 import streamlit as st
 import requests as re
 import json
+import time
 import asyncio
 import spacy
 import subprocess
@@ -11,12 +12,8 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from faker import Faker
 from urllib.parse import quote
-from asyncio import WindowsSelectorEventLoopPolicy
 
 fake = Faker()
-# Set the event loop policy to use WindowsSelectorEventLoop
-if asyncio.get_event_loop_policy() is not WindowsSelectorEventLoopPolicy:
-    asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
 async def translate_text(user_text, target_language):
     url = "https://www.google.com/async/translate"
@@ -85,21 +82,33 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 #             translated_sentences.append(translated_text)
 #     return translated_sentences
 
-async def translate_sentences(sentences, target_language, progress_bar, progress_text):
+async def translate_sentences(sentences, target_language, progress_bar, progress_text, stats_text, dynamic_text):
     translated_sentences = []
+    translation_output = ""
+    start_time = time.time()
     async with aiohttp.ClientSession() as session:
         total = len(sentences)
         for i, sentence in enumerate(sentences):
             translated_text = await translate_text(sentence, target_language)
             translated_sentences.append(translated_text)
+            translation_output += " " + translated_text
+            dynamic_text.markdown(translation_output)  # Update the dynamic display after each sentence
+
+            # Update progress and stats
+            elapsed_time = time.time() - start_time
+            items_per_second = (i + 1) / elapsed_time if elapsed_time > 0 else 0
+            remaining_time = (total - (i + 1)) / items_per_second if items_per_second > 0 else 0
             progress = (i + 1) / total
             progress_bar.progress(progress)
             progress_text.text(f"Translation Progress: {int(progress * 100)}%")
+            stats_text.text(f"[{elapsed_time:.2f}s < {remaining_time:.2f}s, {items_per_second:.2f}it/s]")
+        await session.close()
     return translated_sentences
+
 
 with st.form('translator_form'):
     nlp = load_model("xx_ent_wiki_sm")
-    default_text = """AI-based text translation has revolutionized the way we communicate across languages. Leveraging advanced algorithms and machine learning techniques, AI translation systems can analyze and interpret text in one language and accurately translate it into another. These systems have significantly improved translation accuracy and efficiency, making cross-language communication more seamless and accessible than ever before. From translating business documents and technical manuals to facilitating multilingual conversations and global collaborations, AI-based text translation plays a crucial role in breaking down language barriers and promoting international understanding. Furthermore, AI-driven translation technologies continue to evolve rapidly, incorporating deep learning models, natural language processing (NLP), and neural networks to enhance translation quality and linguistic nuances. These advancements enable AI systems to handle complex sentences, idiomatic expressions, and cultural nuances with greater precision, resulting in more natural and contextually appropriate translations. As AI-based text translation continues to progress, it holds immense potential to bridge linguistic divides, facilitate global commerce, and foster cultural exchange on a global scale."""
+    default_text = """AI-based text translation has revolutionized the way we communicate across languages. Leveraging advanced algorithms and machine learning techniques, AI translation systems can analyze and interpret text in one language and accurately translate it into another. These systems have significantly improved translation accuracy and efficiency, making cross-language communication more seamless and accessible than ever before. From translating business documents and technical manuals to facilitating multilingual conversations and global collaborations, AI-based text translation plays a crucial role in breaking down language barriers and promoting international understanding. Furthermore, AI-driven translation technologies continue to evolve rapidly, incorporating deep learning models, natural language processing (NLP), and neural networks to enhance translation quality and linguistic nuances. These advancements enable AI systems to handle complex sentences, idiomatic expressions, and cultural nuances with greater precision, resulting in more natural and contextually appropriate translations. As AI-based text translation continues to progress, it holds immense potential to bridge linguistic divides, facilitate global commerce, and foster cultural exchange on a global scale."""    
     user_text = st.text_area("Input Text", height=100, value=default_text)
     with open("lang_codes.json", 'r') as codes:
         lang_codes = json.load(codes)
@@ -107,8 +116,7 @@ with st.form('translator_form'):
     target_language = st.selectbox("Target Language", shown_langs)
     submit_button = st.form_submit_button("Translate")
 
-    # Clear previous translation results when a new translation starts
-    translation_output = st.empty()  # Create an empty widget for displaying translation results
+    translation_output = st.empty()  # Widget to display dynamic translation results
 
     if submit_button:
         if not user_text:
@@ -119,18 +127,18 @@ with st.form('translator_form'):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             progress_bar = st.progress(0)
-            progress_text = st.empty()  # Create an empty widget for displaying progress text
-            translated_sentences_task = loop.create_task(translate_sentences(sentences.copy(), lang_codes[target_language], progress_bar, progress_text))
-            translation_output.text("Translating... Please wait.")  # Set a placeholder text while translating
+            progress_text = st.empty()
+            stats_text = st.empty()
+            dynamic_text = st.empty()  # Widget to display the translation dynamically
+            translated_sentences_task = loop.create_task(translate_sentences(sentences.copy(), lang_codes[target_language], progress_bar, progress_text, stats_text, dynamic_text))
 
             try:
                 translated_sentences = loop.run_until_complete(translated_sentences_task)
                 if translated_sentences:
-                    translated_text = " ".join(translated_sentences)
                     translation_output.success("Translation Complete:")
-                    translation_output.write(translated_text)
                 else:
                     translation_output.error("Failed to translate!")
             finally:
                 loop.close()
-                progress_text.empty()  # Clean up the text widget
+                progress_text.empty()
+                stats_text.empty()
