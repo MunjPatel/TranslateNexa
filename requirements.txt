@@ -9,4 +9,4 @@ spacy
 https://github.com/explosion/spacy-models/releases/download/xx_ent_wiki_sm-3.7.0/xx_ent_wiki_sm-3.7.0.tar.gz
 torch==2.3.0
 transformers
- aiohttp==3.9.5 
+aiohttp==3.9.5 
