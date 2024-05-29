@@ -7,6 +7,7 @@ streamlit==1.33.0
 urllib3==2.2.1
 spacy
 https://github.com/explosion/spacy-models/releases/download/xx_ent_wiki_sm-3.7.0/xx_ent_wiki_sm-3.7.0.tar.gz
+https://github.com/explosion/spacy-models/releases/download/xx_sent_ud_sm-3.7.0/xx_sent_ud_sm-3.7.0.tar.gz
 torch==2.3.0
 transformers
 aiohttp==3.9.5 
