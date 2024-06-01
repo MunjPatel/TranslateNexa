@@ -30,7 +30,18 @@ async def translate_text(session, user_text, target_language):
     }
 
     async with session.post(url, headers=headers, data=payload) as response:
-        if response.status == 200:
+        if response.status == 413:
+            # Handle 413 error by reducing payload size
+            half_length = len(user_text) // 2
+            if half_length > 0:
+                first_half = user_text[:half_length]
+                second_half = user_text[half_length:]
+                translated_first_half = await translate_text(session, first_half, target_language)
+                translated_second_half = await translate_text(session, second_half, target_language)
+                return translated_first_half + " " + translated_second_half
+            else:
+                return "Translation failed due to too large content."
+        elif response.status == 200:
             response_text = await response.text()
             if response_text:
                 response_soup = BeautifulSoup(response_text, 'html.parser')
@@ -50,11 +61,11 @@ def load_model(model_name):
     except OSError:
         raise
 
+st.set_page_config(page_title="TranslateNexa")
+
 st.markdown("""
     <div style='text-align: center;'>
-        <img src='https://www.edgemiddleeast.com/cloud/2023/08/08/9dCrm2UL-Gen-AI-1200x800.jpg' 
-             style='width: 300px; height: 300px; object-fit: cover; border-radius: 50%; margin-top: 20px;'>
-        <h3 style='color: grey;'>AI Translator</h3>
+        <h3 style='color: grey;'>Google Translator Clone (with no limits)!</h3>
     </div>
     """, unsafe_allow_html=True)
 
@@ -105,10 +116,10 @@ async def translate_sentences(sentences, target_language, progress_bar, progress
     return translated_sentences, total_tokens, total_time, total_requests, speed, total_sentences_processed
 
 with st.form('translator_form'):
-    nlp = load_model("xx_ent_wiki_sm")
+    nlp = load_model("xx_sent_ud_sm")
     default_text = """AI-based text translation has revolutionized the way we communicate across languages. Leveraging advanced algorithms and machine learning techniques, AI translation systems can analyze and interpret text in one language and accurately translate it into another. These systems have significantly improved translation accuracy and efficiency, making cross-language communication more seamless and accessible than ever before. From translating business documents and technical manuals to facilitating multilingual conversations and global collaborations, AI-based text translation plays a crucial role in breaking down language barriers and promoting international understanding. Furthermore, AI-driven translation technologies continue to evolve rapidly, incorporating deep learning models, natural language processing (NLP), and neural networks to enhance translation quality and linguistic nuances. These advancements enable AI systems to handle complex sentences, idiomatic expressions, and cultural nuances with greater precision, resulting in more natural and contextually appropriate translations. As AI-based text translation continues to progress, it holds immense potential to bridge linguistic divides, facilitate global commerce, and foster cultural exchange on a global scale."""
     user_text = st.text_area("Input Text", height=150, value=default_text)
-    with open("wiki_sm_lang.json", 'r') as codes:
+    with open("lang_codes.json", 'r') as codes:
         lang_codes = json.load(codes)
     shown_langs = tuple(lang for lang in lang_codes.keys())
     target_language = st.selectbox("Target Language", shown_langs)
@@ -125,7 +136,7 @@ with st.form('translator_form'):
 
             # Dynamically determine batch size based on the length of the input text
             total_length = sum(len(sentence.split()) for sentence in sentences)
-            batch_size = min(500, max(1, total_length // 50))  # Set upper limit for batch size to 100 sentences/request
+            batch_size = min(250, max(1, total_length // 50))  # Set upper limit for batch size to 250 sentences/request
 
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
