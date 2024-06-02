@@ -31,7 +31,6 @@ async def translate_text(session, user_text, target_language):
 
     async with session.post(url, headers=headers, data=payload) as response:
         if response.status == 413:
-            # Handle 413 error by reducing payload size
             half_length = len(user_text) // 2
             if half_length > 0:
                 first_half = user_text[:half_length]
@@ -97,7 +96,6 @@ async def translate_sentences(sentences, target_language, progress_bar, progress
             translated_sentences.extend(translated_batch)
             translation_output += " ".join(translated_batch) + " "
             
-            # Update progress and stats
             elapsed_time = time.time() - start_time
             items_per_second = (i + len(batch)) / elapsed_time if elapsed_time > 0 else 0
             remaining_time = (total - (i + len(batch))) / items_per_second if items_per_second > 0 else 0
@@ -122,7 +120,7 @@ with st.form('translator_form'):
     with open("lang_codes.json", 'r') as codes:
         lang_codes = json.load(codes)
     shown_langs = tuple(lang for lang in lang_codes.keys())
-    target_language = st.selectbox("Target Language", shown_langs)
+    target_languages = st.multiselect("Target Languages", shown_langs, max_selections=2)
     submit_button = st.form_submit_button("Translate")
 
     if submit_button:
@@ -130,27 +128,47 @@ with st.form('translator_form'):
 
         if not user_text.strip():
             st.error("Please enter some input text!")
+        elif not target_languages:
+            st.error("Please select at least one target language!")
         else:
             doc = nlp(user_text)
             sentences = [sent.text for sent in doc.sents]
 
-            # Dynamically determine batch size based on the length of the input text
             total_length = sum(len(sentence.split()) for sentence in sentences)
-            batch_size = min(250, max(1, total_length // 50))  # Set upper limit for batch size to 250 sentences/request
+            batch_size = min(250, max(1, total_length // 50))
 
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            progress_bar = st.progress(0)
-            progress_text = st.empty()
-            stats_text = st.empty()
-            translation_output = st.empty()
+
+            columns = st.columns(len(target_languages))
+            progress_bars = {lang: columns[i].progress(0) for i, lang in enumerate(target_languages)}
+            progress_texts = {lang: columns[i].empty() for i, lang in enumerate(target_languages)}
+            stats_texts = {lang: columns[i].empty() for i, lang in enumerate(target_languages)}
+            translation_outputs = {lang: columns[i].empty() for i, lang in enumerate(target_languages)}
+
+            async def translate_all_languages():
+                tasks = []
+                for lang in target_languages:
+                    tasks.append(
+                        translate_sentences(
+                            sentences, lang_codes[lang], progress_bars[lang], progress_texts[lang], stats_texts[lang], batch_size=batch_size
+                        )
+                    )
+                return await asyncio.gather(*tasks)
 
             try:
-                translated_sentences, total_tokens, total_time, total_requests, speed, total_sentences_processed = loop.run_until_complete(
-                    translate_sentences(sentences, lang_codes[target_language], progress_bar, progress_text, stats_text, batch_size=batch_size)
-                )
-                if translated_sentences:
-                    translation_output.text_area("Translation Complete:", value=" ".join(translated_sentences), height=150)
+                all_results = loop.run_until_complete(translate_all_languages())
+                for i, lang in enumerate(target_languages):
+                    translated_sentences, total_tokens, total_time, total_requests, speed, total_sentences_processed = all_results[i]
+                    progress_texts[lang].text(f"Translation Progress: 100%")
+                    stats_texts[lang].markdown(
+                        f"**Speed:** {speed:.2f} sentences/sec  \n"
+                        f"**Total Number of Sentences Processed:** {total_sentences_processed}  \n"
+                        f"**Batch Size Taken:** {batch_size} sentences/request  \n"
+                        f"**Total Number of Requests Made:** {total_requests}"
+                    )
+                    if translated_sentences:
+                        translation_outputs[lang].text_area(f"Translation Complete ({lang}):", value=" ".join(translated_sentences), height=150)
             except Exception as e:
                 st.error(f"Failed to translate! Error: {e}")
             finally:
