@@ -95,7 +95,6 @@ async def translate_sentences(sentences, target_language, progress_bar, progress
             # Update UI
             elapsed_time = time.time() - start_time
             items_per_second = (i + len(batch)) / elapsed_time if elapsed_time > 0 else 0
-            remaining_time = (total - (i + len(batch))) / items_per_second if items_per_second > 0 else 0
             progress = (i + len(batch)) / total
             progress_bar.progress(progress)
             progress_text.text(f"Translation Progress: {int(progress * 100)}%")
@@ -166,7 +165,7 @@ with st.form('translator_form'):
                 return await asyncio.gather(*tasks)
 
             try:
-                all_results = asyncio.run(translate_all_languages())  # Use asyncio.run() here
+                all_results = asyncio.run(translate_all_languages())
                 for i, lang in enumerate(target_languages):
                     translated_sentences, total_time, speed = all_results[i]
                     progress_texts[lang].text(f"Translation Progress: 100%")
