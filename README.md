@@ -36,15 +36,7 @@ If you wish to run the app locally, follow these steps:
    ```
 ## How It Works
 
-graph TD;
-    A[User Input] --> B[Sentence Tokenization];
-    B --> C[Batch Processing];
-    C --> D{Asynchronous Google Translate API Requests};
-    D -- Success --> E[Translation Parsing];
-    D -- 413 Payload Too Large --> F[Split Text & Retry];
-    F --> C;
-    E --> G[Real-Time Progress Display];
-    G --> H[Translation Output];
+![Diagram](flowchart.png)
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
