@@ -37,6 +37,11 @@ If you wish to run the app locally, follow these steps:
 ## How It Works
 
 ![Diagram](flowchart.png)
+
+## Translation Accuracy
+
+Although this method shows impressive capabilities in terms of accuracy, speed and handling complex and large text inputs effectively, by large the overall accuracy of translations can still vary depending on the complexity of the text and the language pair. It is important to note that machine translation is not flawless and may struggle with idiomatic expressions, cultural nuances, or context-specific meanings. I would recommend using this tool for general purposes and not for translations that require a high level of precision.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
