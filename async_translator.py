@@ -172,7 +172,8 @@
 #                     stats_texts[lang].markdown(
 #                         f"**Speed:** {speed:.2f} sentences/sec  \n"
 #                         f"**Total Number of Sentences Processed:** {len(sentences)}  \n"
-#                         f"**Batch Size Taken:** {batch_size} sentences/request"
+#                         f"**Batch Size Taken:** {batch_size} sentences/request  \n"
+#                         f"**Total Execution Time:** {total_time:.2f} seconds"
 #                     )
 #                     if translated_sentences:
 #                         translation_outputs[lang].text_area(f"Translation Complete ({lang}):", value=" ".join(translated_sentences), height=150)
@@ -226,8 +227,13 @@ async def translate_text(session, user_text, target_language):
             response_text = await response.text()
             if response_text:
                 response_soup = BeautifulSoup(response_text, 'html.parser')
-                translated_text = response_soup.find('span', id='tw-answ-target-text').text
-                return translated_text.replace("'", '').replace('"', '').strip()
+                # Fix the extraction by correctly targeting the span element containing translation
+                translated_span = response_soup.find('span', id='tw-answ-target-text')
+                if translated_span:
+                    translated_text = translated_span.text
+                    return translated_text.replace("'", '').replace('"', '').strip()
+                else:
+                    return "An error occurred while extracting translation text."
             else:
                 return "An error occurred while parsing the response."
         else:
@@ -242,11 +248,12 @@ def load_model(model_name):
     except OSError:
         raise
 
-st.set_page_config(page_title="TranslateNexa")
+st.set_page_config(page_title="TranslateNexa 🚀", page_icon="🌍")
 
+# Header with emojis
 st.markdown("""
     <div style='text-align: center;'>
-        <h3 style='color: grey;'>Google Translator Clone (with no limits)!</h3>
+        <h3 style='color: #6C757D;'>🌍✨ Google Translator Clone (with no limits)! ✨🌍</h3>
     </div>
     """, unsafe_allow_html=True)
 
@@ -278,12 +285,12 @@ async def translate_sentences(sentences, target_language, progress_bar, progress
             items_per_second = (i + len(batch)) / elapsed_time if elapsed_time > 0 else 0
             progress = (i + len(batch)) / total
             progress_bar.progress(progress)
-            progress_text.text(f"Translation Progress: {int(progress * 100)}%")
+            progress_text.text(f"⏳ Translation Progress: {int(progress * 100)}%")
 
-            stats_text.markdown(f"**Speed:** {items_per_second:.2f} sentences/sec  \n"
-                                f"**Total Number of Sentences Processed:** {i + len(batch)}  \n"
-                                f"**Batch Size Taken:** {batch_size} sentences/request  \n"
-                                f"**Total Number of Requests Made:** {(i // batch_size) + 1}")
+            stats_text.markdown(f"🚀 **Speed:** {items_per_second:.2f} sentences/sec  \n"
+                                f"💬 **Total Number of Sentences Processed:** {i + len(batch)}  \n"
+                                f"📦 **Batch Size Taken:** {batch_size} sentences/request  \n"
+                                f"📝 **Total Number of Requests Made:** {(i // batch_size) + 1}")
 
     total_time = time.time() - start_time
     speed = len(sentences) / total_time if total_time > 0 else 0
@@ -303,25 +310,25 @@ def clear_text():
 nlp = load_model("xx_sent_ud_sm")
 
 with st.form('translator_form'):
-    user_text = st.text_area("Input Text", height=150, value=st.session_state['user_text'], key="user_text")
+    user_text = st.text_area("✍️ Input Text", height=150, value=st.session_state['user_text'], key="user_text")
     with open("lang_codes.json", 'r') as codes:
         lang_codes = json.load(codes)
     shown_langs = tuple(lang for lang in lang_codes.keys())
-    target_languages = st.multiselect("Target Languages", shown_langs, max_selections=2, key="target_languages")
+    target_languages = st.multiselect("🌐 Target Languages", shown_langs, max_selections=2, key="target_languages")
     
     col1, col2 = st.columns([1, 1])  # Two equal-width columns
     with col1:
-        submit_button = st.form_submit_button("Translate")
+        submit_button = st.form_submit_button("✨ Translate 🚀")
     with col2:
-        clear_button = st.form_submit_button("Clear Text", on_click=clear_text, use_container_width=True)
+        clear_button = st.form_submit_button("🧹 Clear Text", on_click=clear_text, use_container_width=True)
 
     if submit_button:
         st.empty()  # Clear previous output
 
         if not user_text.strip():
-            st.error("Please enter some input text!")
+            st.error("⚠️ Please enter some input text!")
         elif not target_languages:
-            st.error("Please select at least one target language!")
+            st.error("⚠️ Please select at least one target language!")
         else:
             doc = nlp(user_text)
             sentences = [sent.text for sent in doc.sents]
@@ -335,6 +342,7 @@ with st.form('translator_form'):
             stats_texts = {lang: columns[i].empty() for i, lang in enumerate(target_languages)}
             translation_outputs = {lang: columns[i].empty() for i, lang in enumerate(target_languages)}
 
+            # Wrapper to run the async translation inside Streamlit
             async def translate_all_languages():
                 tasks = []
                 for lang in target_languages:
@@ -345,18 +353,19 @@ with st.form('translator_form'):
                     )
                 return await asyncio.gather(*tasks)
 
+            # Run the async function using asyncio.run()
             try:
                 all_results = asyncio.run(translate_all_languages())
                 for i, lang in enumerate(target_languages):
                     translated_sentences, total_time, speed = all_results[i]
-                    progress_texts[lang].text(f"Translation Progress: 100%")
+                    progress_texts[lang].text(f"✅ Translation Progress: 100%")
                     stats_texts[lang].markdown(
-                        f"**Speed:** {speed:.2f} sentences/sec  \n"
-                        f"**Total Number of Sentences Processed:** {len(sentences)}  \n"
-                        f"**Batch Size Taken:** {batch_size} sentences/request  \n"
-                        f"**Total Execution Time:** {total_time:.2f} seconds"
+                        f"🚀 **Speed:** {speed:.2f} sentences/sec  \n"
+                        f"💬 **Total Number of Sentences Processed:** {len(sentences)}  \n"
+                        f"📦 **Batch Size Taken:** {batch_size} sentences/request  \n"
+                        f"⏱ **Total Execution Time:** {total_time:.2f} seconds"
                     )
                     if translated_sentences:
-                        translation_outputs[lang].text_area(f"Translation Complete ({lang}):", value=" ".join(translated_sentences), height=150)
+                        translation_outputs[lang].text_area(f"🌍 Translation Complete ({lang}):", value=" ".join(translated_sentences), height=150)
             except Exception as e:
-                st.error(f"Failed to translate! Error: {e}")
+                st.error(f"❌ Failed to translate! Error: {e}")
