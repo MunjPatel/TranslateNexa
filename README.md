@@ -1,17 +1,23 @@
-# TranslateNexa: Google Translator Clone
+# **TranslateNexa: Google Translator Clone**
 
-TranslateNexa is a Streamlit-based application that offers asynchronous and efficient translations using Google's translation service. The app is capable of handling large text inputs by breaking them down into manageable batches, providing real-time progress updates, and offering multiple language translations simultaneously.
+**TranslateNexa** is a **Streamlit-based** application that offers **asynchronous** and **efficient translations** using **Google's translation service**. The app is capable of handling **large text inputs** by breaking them down into manageable batches, providing **real-time progress updates**, and offering **multiple language translations** simultaneously.
 
-## Features
+---
 
-- **Asynchronous Translation**: Efficiently handles large inputs with non-blocking requests.
-- **Batch Processing**: Splits text into batches to avoid payload limits, ensuring successful translations even for lengthy inputs.
-- **Progress Tracking**: Displays real-time translation progress, speed, and statistics for a better user experience.
-- **Clear Input**: Reset the input text and language selections with a single click.
+![App Preview](translate_nexa.gif)
+
+---
+
+## **Features**
+
+- **Asynchronous Translation**: Efficiently handles large inputs with non-blocking requests.  
+- **Batch Processing**: Splits text into batches to avoid payload limits, ensuring successful translations even for lengthy inputs.  
+- **Progress Tracking**: Displays real-time translation progress, speed, and statistics for a better user experience.  
+- **Clear Input**: Reset the input text and language selections with a single click.  
 
 ## Access the Application
 
-TranslateNexa is hosted on Streamlit Community Cloud and can be accessed directly in production at:  
+TranslateNexa is hosted on **Streamlit Community Cloud** and can be accessed directly in production at:  
 **[TranslateNexa on Streamlit](https://translatenexa.streamlit.app/)**
 
 ## Running Locally
@@ -40,7 +46,7 @@ If you wish to run the app locally, follow these steps:
 
 ## Translation Accuracy
 
-Although this method shows impressive capabilities in terms of accuracy, speed and handling complex and large text inputs effectively, by large the overall accuracy of translations can still vary depending on the complexity of the text and the language pair. It is important to note that machine translation is not flawless and may struggle with idiomatic expressions, cultural nuances, or context-specific meanings. I would recommend using this tool for general purposes and not for translations that require a high level of precision.
+Although this method shows impressive capabilities in terms of **accuracy**, **speed**, and handling **complex and large text inputs** effectively, the overall translation accuracy can still vary depending on the complexity of the text and the language pair. It is important to note that machine translation is not flawless and may struggle with idiomatic expressions, cultural nuances, or context-specific meanings. I recommend using this tool for general purposes, not for translations that require high precision.
 
 ## Learn More
 
